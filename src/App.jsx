@@ -355,23 +355,97 @@ export default function App() {
   };
   //end App3
 
-  const uploadImageToStorage = async (file) => {
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
-    const filePath = `products/${fileName}`;
+  // Fungsi otomatis kompresi foto di browser sebelum diupload ke Supabase
+  const compressImage = (
+    file,
+    maxWidth = 800,
+    maxHeight = 800,
+    quality = 0.75,
+  ) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
 
+          // Skala ulang dimensi jika melebihi batas maksimal (pertahankan rasio aspek)
+          if (width > height) {
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+
+          // Gambar ulang ke elemen canvas HTML5
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Ekspor sebagai file blob WebP (fallback ke JPEG jika browser lama)
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                // Bungkus kembali menjadi File object
+                const compressedFile = new File(
+                  [blob],
+                  file.name.replace(/\.[^/.]+$/, "") + ".webp",
+                  {
+                    type: "image/webp",
+                    lastModified: Date.now(),
+                  },
+                );
+                resolve(compressedFile);
+              } else {
+                reject(new Error("Gagal mengompres gambar"));
+              }
+            },
+            "image/webp",
+            quality,
+          );
+        };
+        img.onerror = (err) => reject(err);
+      };
+      reader.onerror = (err) => reject(err);
+    });
+  }; // end const compressImage
+
+  //Upload ke Supabase Storage dengan kompresi otomatis
+  const uploadImageToStorage = async (file) => {
+    // 1. Kompres gambar terlebih dahulu (2 MB -> ~50 KB)
+    const compressedFile = await compressImage(file);
+
+    // 2. Buat nama file unik berformat .webp
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.webp`;
+    const filePath = `products/${fileName}`;
+    
+    // 3. Upload file yang sudah super enteng
     const { error: uploadError } = await supabase.storage
       .from("product-images")
-      .upload(filePath, file);
+      .upload(filePath, compressedFile, {
+        contentType: "image/webp",
+      });
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      throw uploadError;
+    }
 
     const {
       data: { publicUrl },
     } = supabase.storage.from("product-images").getPublicUrl(filePath);
 
     return publicUrl;
-  };
+  }; // end const uploadImageToStorage
 
   const openAddModal = () => {
     setEditingProduct(null);
