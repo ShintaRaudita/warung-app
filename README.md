@@ -12,7 +12,7 @@ Aplikasi web katalog produk digital berbasis *mobile-first* yang dirancang untuk
 ## Fitur Utama
 * **Tampilan Mobile-First & Responsif**: Antarmuka bersih, modern, dan dioptimalkan secara dinamis untuk berbagai ukuran layar smartphone hingga desktop.
 * **Pencarian & Filter Produk**: Memungkinkan pelanggan mencari produk berdasarkan nama atau kategori secara *real-time*.
-* **Manajemen Katalog & Detail Produk**: Penyajian daftar barang lengkap dengan foto, nama produk, harga, status stok, serta deskripsi produk melalui modal interaktif.
+* **Manajemen Katalog & Detail Produk**: Penyajian daftar barang lengkap dengan foto, nama produk, harga, status stok, serta menghitung total belanjaan melalui modal interaktif.
 * **Sinkronisasi Data Real-Time**: Terintegrasi langsung dengan database cloud Supabase untuk pembaruan data produk yang akurat dan terpusat.
 * **Single Page Application (SPA) Routing**: Navigasi halaman yang mulus dan cepat dengan penanganan *redirect rule* yang teroptimasi.
 
